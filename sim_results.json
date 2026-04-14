@@ -1,0 +1,111 @@
+{
+  "main": {
+    "crash_lateral_slow": {
+      "is_crash": true,
+      "n": 500,
+      "n_detected": 497,
+      "rate": 0.994,
+      "lat_mean": 2860.0,
+      "lat_std": 0.0
+    },
+    "crash_lateral_fast": {
+      "is_crash": true,
+      "n": 500,
+      "n_detected": 500,
+      "rate": 1.0,
+      "lat_mean": 2860.0,
+      "lat_std": 0.0
+    },
+    "crash_forward": {
+      "is_crash": true,
+      "n": 500,
+      "n_detected": 500,
+      "rate": 1.0,
+      "lat_mean": 2860.0,
+      "lat_std": 0.0
+    },
+    "crash_soft_surface": {
+      "is_crash": true,
+      "n": 500,
+      "n_detected": 500,
+      "rate": 1.0,
+      "lat_mean": 2860.0,
+      "lat_std": 0.0
+    },
+    "noncrash_pothole_mild": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_pothole_medium": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_pothole_severe": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_speed_bump": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_hard_braking": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_cobblestone": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_gravel": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    },
+    "noncrash_curb_jump": {
+      "is_crash": false,
+      "n": 500,
+      "n_detected": 0,
+      "rate": 0.0,
+      "lat_mean": null,
+      "lat_std": null
+    }
+  },
+  "aggregate": {
+    "tp": 1997,
+    "fp": 0,
+    "tn": 4000,
+    "fn": 3,
+    "sensitivity": 0.9985,
+    "specificity": 1.0,
+    "precision": 1.0,
+    "f1": 0.9992494370778083,
+    "accuracy": 0.9995
+  }
+}
