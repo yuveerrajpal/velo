@@ -1,0 +1,3158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="VeloSentinel — Real-time bicycle crash detection. Autonomous emergency response. Made for Indian cyclists." />
+<title>VeloSentinel — Because the next second matters.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #fafafa;
+  --white: #ffffff;
+  --black: #111111;
+  --green: #00c853;
+  --green-light: #b9f6ca;
+  --cyan: #00e5ff;
+  --cyan-light: #b2ebf2;
+  --yellow: #ffea00;
+  --yellow-light: #fff9c4;
+  --red: #ff5252;
+  --red-light: #ffcdd2;
+  --purple: #b388ff;
+  --gray: #616161;
+  --gray-light: #e0e0e0;
+  --shadow: 5px 5px 0px 0px #111;
+  --shadow-sm: 3px 3px 0px 0px #111;
+  --border: 3px solid #111;
+  --border-sm: 2px solid #111;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+body {
+  font-family: var(--sans);
+  background-color: var(--bg);
+  color: var(--black);
+  line-height: 1.6;
+  font-size: 16px;
+  /* Subtle grid background */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============ NAV ============ */
+#navbar {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.logo-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--green);
+  border: 2px solid var(--black);
+  display: inline-block;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 4px;
+}
+
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+
+.nav-links a:hover { background: var(--yellow); }
+.nav-links a.active { background: var(--green-light); }
+
+.nav-cta {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  background: var(--green);
+  border: var(--border-sm);
+  box-shadow: 2px 2px 0 0 #111;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-cta:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 #111;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.hamburger span {
+  width: 24px;
+  height: 3px;
+  background: var(--black);
+  transition: all 0.3s;
+}
+
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  right: 16px;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  z-index: 999;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.mobile-menu.open { display: flex; }
+
+.mobile-menu a {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.mobile-menu a:last-child { border-bottom: none; }
+.mobile-menu a:hover { background: var(--yellow-light); }
+
+/* ============ HERO ============ */
+#hero {
+  padding: 120px 0 60px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 12px;
+  background: var(--green-light);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+
+.hero-content h1 {
+  font-family: var(--sans);
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  letter-spacing: -0.03em;
+}
+
+.hero-content h1 .accent {
+  background: var(--yellow);
+  padding: 0 6px;
+  display: inline;
+}
+
+.hero-content h1 .underline-green {
+  text-decoration: underline;
+  text-decoration-color: var(--green);
+  text-decoration-thickness: 6px;
+  text-underline-offset: 4px;
+}
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--gray);
+  max-width: 540px;
+  margin-bottom: 28px;
+  line-height: 1.65;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.hero-stat {
+  background: var(--white);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  text-align: center;
+}
+
+.hero-stat-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.hero-stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  cursor: pointer;
+  border: var(--border-sm);
+  transition: all 0.15s;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: var(--green);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 #111;
+}
+
+.btn-outline {
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline:hover {
+  background: var(--yellow-light);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 #111;
+}
+
+.btn-dark {
+  background: var(--black);
+  color: var(--white);
+  box-shadow: none;
+  border-color: var(--black);
+}
+
+.btn-dark:hover { background: #333; }
+
+/* Hero bike visual */
+.hero-visual {
+  position: relative;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+}
+
+.bike-svg { width: 100%; max-width: 420px; }
+
+.float-tag {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 10px;
+  background: var(--white);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  animation: float 3s ease-in-out infinite;
+}
+
+.float-tag.tag-1 { top: 16px; right: 16px; background: var(--green-light); }
+.float-tag.tag-2 { bottom: 16px; left: 16px; background: var(--cyan-light); }
+.float-tag.tag-3 { top: 16px; left: 16px; background: var(--yellow-light); }
+.float-tag.tag-4 { bottom: 16px; right: 16px; background: var(--red-light); animation-delay: 1.5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ============ SPEC BAR ============ */
+.spec-bar {
+  background: var(--black);
+  color: var(--white);
+  padding: 14px 0;
+  border-top: var(--border);
+  border-bottom: var(--border);
+  overflow: hidden;
+}
+
+.spec-bar-inner {
+  display: flex;
+  gap: 36px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.spec-bar-item {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+/* ============ SECTIONS ============ */
+section { padding: 80px 0; }
+
+.section-box {
+  display: inline-block;
+  background: var(--white);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 24px;
+  margin-bottom: 12px;
+}
+
+.section-box:active { transform: rotate(-3deg); }
+
+.section-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray);
+}
+
+.section-title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.section-sub {
+  font-size: 16px;
+  color: var(--gray);
+  max-width: 640px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.center { text-align: center; }
+.center .section-sub { margin-left: auto; margin-right: auto; }
+
+/* ============ CARDS (brutalist) ============ */
+.card {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 0 #111;
+}
+
+.card-header {
+  padding: 14px 20px;
+  border-bottom: 2px solid var(--black);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.card-header.green { background: var(--green-light); }
+.card-header.cyan { background: var(--cyan-light); }
+.card-header.yellow { background: var(--yellow-light); }
+.card-header.red { background: var(--red-light); }
+.card-header.purple { background: #e1bee7; }
+.card-header.dark { background: var(--black); color: var(--white); }
+
+.card-body { padding: 20px; }
+.card-body h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.card-body p {
+  font-size: 14px;
+  color: var(--gray);
+  line-height: 1.65;
+}
+
+.card-body ul {
+  list-style: none;
+  margin-top: 12px;
+}
+
+.card-body ul li {
+  font-size: 13px;
+  color: var(--gray);
+  padding: 8px 0;
+  border-top: 1px solid var(--gray-light);
+  padding-left: 16px;
+  position: relative;
+}
+
+.card-body ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* ============ PROBLEM ============ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.stat-source {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+
+.stat-num {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-desc {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+.problem-prose {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+
+.problem-prose h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.problem-prose p {
+  font-size: 15px;
+  color: var(--gray);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.pull-quote {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 16px 20px;
+  background: var(--green-light);
+  border-left: 6px solid var(--green);
+  margin-top: 20px;
+}
+
+/* ============ SOLUTION (dark) ============ */
+.dark-section {
+  background: var(--black);
+  color: var(--white);
+  border-top: var(--border);
+  border-bottom: var(--border);
+}
+
+.dark-section .section-tag { color: var(--green); }
+.dark-section .section-sub { color: rgba(255,255,255,0.6); }
+.dark-section .section-box { background: var(--black); border-color: #444; box-shadow: 3px 3px 0 0 #444; }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.feature-card {
+  border: 2px solid #444;
+  box-shadow: 4px 4px 0 0 #333;
+  background: #1a1a1a;
+  padding: 24px;
+  transition: all 0.2s;
+}
+
+.feature-card:hover {
+  border-color: var(--green);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #333;
+}
+
+.feature-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.feature-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+}
+
+/* ============ HOW IT WORKS ============ */
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.timeline-card {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+}
+
+.timeline-card-header {
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timeline-num {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid var(--black);
+}
+
+.timeline-card[data-color="blue"] .timeline-card-header { background: var(--cyan-light); }
+.timeline-card[data-color="blue"] .timeline-num { background: var(--cyan); }
+.timeline-card[data-color="amber"] .timeline-card-header { background: var(--yellow-light); }
+.timeline-card[data-color="amber"] .timeline-num { background: var(--yellow); }
+.timeline-card[data-color="rose"] .timeline-card-header { background: var(--red-light); }
+.timeline-card[data-color="rose"] .timeline-num { background: var(--red); color: #fff; }
+.timeline-card[data-color="mint"] .timeline-card-header { background: var(--green-light); }
+.timeline-card[data-color="mint"] .timeline-num { background: var(--green); }
+
+.timeline-phase {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.timeline-card-body {
+  padding: 18px 16px;
+}
+
+.timeline-card-body h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.timeline-card-body p {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.threshold-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  background: var(--yellow-light);
+  border: 1px solid var(--black);
+}
+
+.rejection-box {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+}
+
+.rejection-box h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.rejection-box p {
+  font-size: 14px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+
+.rejection-stat {
+  text-align: center;
+  background: var(--green-light);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+}
+
+.rejection-stat-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.rejection-stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray);
+  margin-top: 4px;
+}
+
+/* ============ ALGORITHM ============ */
+.algo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.algo-text h2 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.algo-text p {
+  font-size: 15px;
+  color: var(--gray);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.code-block {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 20px;
+  border: var(--border);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  white-space: pre;
+  margin-bottom: 20px;
+}
+
+.code-block .comment { color: #6a9955; }
+.code-block .keyword { color: #c586c0; }
+.code-block .string  { color: #ce9178; }
+.code-block .fn      { color: #dcdcaa; }
+.code-block .number  { color: #b5cea8; }
+
+.threshold-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border: var(--border);
+  box-shadow: var(--shadow);
+}
+
+.threshold-table th, .threshold-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--gray-light);
+}
+
+.threshold-table th {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.threshold-table td { background: var(--white); }
+.threshold-table .mono { font-family: var(--mono); font-size: 12px; }
+
+/* FSM Diagram */
+.fsm-diagram {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.fsm-diagram h4 {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.fsm-svg { width: 100%; }
+
+.fsm-arrow {
+  fill: none;
+  stroke: var(--gray);
+  stroke-width: 2;
+  marker-end: url(#arrowhead);
+}
+
+.fsm-state-circle {
+  fill: var(--white);
+  stroke: var(--black);
+  stroke-width: 3;
+  transition: fill 0.3s;
+}
+
+.fsm-state-circle.active { fill: var(--green-light); stroke: var(--green); }
+.fsm-state-circle.idle { fill: var(--cyan-light); }
+.fsm-state-circle.freefall { fill: var(--yellow-light); }
+.fsm-state-circle.impact { fill: var(--red-light); }
+.fsm-state-circle.confirming { fill: var(--green-light); }
+
+.fsm-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--black);
+  text-anchor: middle;
+}
+
+.fsm-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--gray);
+  text-anchor: middle;
+}
+
+.fsm-arrow-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--gray);
+}
+
+/* ============ HARDWARE ============ */
+.hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+/* ============ ROADMAP ============ */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.phase-status {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border: 1px solid var(--black);
+  margin-left: auto;
+}
+
+.phase-card[data-phase="1"] .phase-status { background: var(--green-light); }
+.phase-card[data-phase="2"] .phase-status { background: var(--yellow-light); }
+.phase-card[data-phase="3"] .phase-status { background: var(--gray-light); }
+
+.phase-price {
+  background: var(--yellow-light);
+  border: 1px solid var(--black);
+  padding: 10px 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.phase-price-amount {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.phase-price-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray);
+}
+
+/* ============ RESULTS (dark) ============ */
+#results {
+  background: var(--black);
+  color: var(--white);
+  border-top: var(--border);
+  border-bottom: var(--border);
+}
+
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.metric {
+  border: 2px solid #444;
+  background: #1a1a1a;
+  padding: 18px;
+  text-align: center;
+}
+
+.metric-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.metric-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+.chart-card {
+  border: 2px solid #444;
+  background: #1a1a1a;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.chart-card h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 16px;
+}
+
+.chart-container { position: relative; height: 380px; }
+.chart-container.tall { height: 560px; }
+
+.confusion-matrix {
+  border: 2px solid #444;
+  background: #1a1a1a;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.confusion-matrix h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 16px;
+}
+
+.cm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.cm-table th, .cm-table td {
+  padding: 14px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.cm-table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+
+.cm-cell { padding: 20px; }
+.cm-good { background: rgba(0,200,83,0.12); }
+.cm-bad { background: rgba(255,82,82,0.08); }
+
+.cm-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+
+.cm-value {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.cm-good .cm-value { color: var(--green); }
+.cm-bad .cm-value { color: var(--red); }
+
+.key-insight {
+  border: 2px solid #444;
+  background: #1a1a1a;
+  padding: 20px 24px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+  border-left: 6px solid var(--green);
+}
+
+.key-insight strong { color: var(--green); }
+
+/* ============ VISUALIZER ============ */
+.viz-container {
+  background: var(--black);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.viz-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 2px solid #333;
+  background: #1a1a1a;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.viz-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.viz-tab {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  border: 1px solid #444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.viz-tab:hover { border-color: #666; color: #fff; }
+.viz-tab.active { background: var(--green); color: var(--black); border-color: var(--green); }
+
+.viz-controls { display: flex; gap: 6px; }
+
+.viz-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #444;
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.viz-btn:hover { border-color: var(--green); background: rgba(0,200,83,0.1); }
+.viz-btn svg { width: 18px; height: 18px; }
+
+.viz-canvas-wrap {
+  position: relative;
+  padding: 0;
+}
+
+.viz-canvas {
+  display: block;
+  width: 100%;
+  height: 320px;
+  background: #0d1117;
+}
+
+.viz-state-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border: 2px solid #444;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  z-index: 2;
+}
+
+.viz-state-pill[data-state="IDLE"]        { border-color: var(--cyan); color: var(--cyan); }
+.viz-state-pill[data-state="FREE_FALL"]   { border-color: var(--yellow); color: var(--yellow); }
+.viz-state-pill[data-state="IMPACT_SEEN"] { border-color: var(--red); color: var(--red); }
+.viz-state-pill[data-state="CONFIRMED"]   { border-color: var(--green); color: var(--green); }
+
+.viz-legend {
+  position: absolute;
+  top: 44px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2;
+}
+
+.viz-legend-item {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viz-legend-dot {
+  width: 10px;
+  height: 3px;
+  background: currentColor;
+  display: inline-block;
+}
+
+.viz-toast {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: var(--green);
+  color: var(--black);
+  border: 2px solid var(--black);
+  box-shadow: 3px 3px 0 0 rgba(0,0,0,0.5);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 3;
+}
+
+.viz-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.viz-toast-icon svg { stroke: var(--black); }
+.viz-toast-title { font-weight: 700; }
+.viz-toast-sub { font-size: 10px; font-weight: 400; opacity: 0.7; }
+
+.viz-readouts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 2px solid #333;
+}
+
+.viz-readout {
+  padding: 14px 16px;
+  text-align: center;
+  border-right: 1px solid #333;
+  background: #1a1a1a;
+}
+
+.viz-readout:last-child { border-right: none; }
+
+.viz-readout-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 4px;
+}
+
+.viz-readout-value {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.viz-readout-value.mint { color: var(--green); }
+
+.viz-bullets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.viz-bullet {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.viz-bullet-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.viz-bullet-desc {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+/* ============ RESEARCH ============ */
+.research-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+.paper-card {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.paper-top {
+  padding: 20px 24px;
+  background: var(--black);
+  color: var(--white);
+  border-bottom: 2px solid var(--black);
+}
+
+.paper-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+.paper-title-snippet {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.paper-body { padding: 24px; }
+
+.paper-body h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.paper-author {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.paper-abstract {
+  font-size: 14px;
+  color: var(--gray);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.paper-sections {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gray);
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--gray-light);
+  margin-bottom: 16px;
+}
+
+.research-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.research-col h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.references, .methodology-list {
+  list-style: none;
+  counter-reset: ref;
+}
+
+.references li, .methodology-list li {
+  font-size: 13px;
+  color: var(--gray);
+  padding: 8px 0 8px 24px;
+  position: relative;
+  border-bottom: 1px solid var(--gray-light);
+  line-height: 1.5;
+  counter-increment: ref;
+}
+
+.references li::before {
+  content: '[' counter(ref) ']';
+  position: absolute;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray);
+}
+
+.methodology-list li::before {
+  content: '>';
+  position: absolute;
+  left: 4px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* ============ AWARDS / PROJECT ============ */
+.awards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.award-card {
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.award-card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 0 #111;
+}
+
+.award-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+
+.award-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.award-card p {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.55;
+}
+
+.awards-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--green-light);
+  border: var(--border);
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+  margin-top: 32px;
+}
+
+.awards-cta-text {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.awards-cta-buttons { display: flex; gap: 12px; }
+
+/* ============ FOOTER ============ */
+footer {
+  background: var(--green);
+  border-top: var(--border);
+  padding: 24px 0;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-brand {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--black);
+}
+
+.footer-contact {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--black);
+}
+
+/* ============ ALERT BADGE ============ */
+#alert-badge {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--green);
+  color: var(--black);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  z-index: 900;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s;
+  cursor: default;
+}
+
+#alert-badge.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.alert-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--black);
+  display: inline-block;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.alert-preview {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border: var(--border-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+  min-width: 260px;
+  font-size: 12px;
+  color: var(--black);
+}
+
+#alert-badge:hover .alert-preview { display: block; }
+
+.alert-preview-title {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 6px;
+  color: var(--red);
+}
+
+.alert-preview-row {
+  font-size: 11px;
+  margin-bottom: 2px;
+  color: var(--gray);
+}
+
+.alert-preview-link {
+  font-size: 10px;
+  color: var(--green);
+  word-break: break-all;
+  margin-top: 6px;
+  display: block;
+}
+
+/* ============ SCROLL REVEAL ============ */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal.d1 { transition-delay: 0.06s; }
+.reveal.d2 { transition-delay: 0.12s; }
+.reveal.d3 { transition-delay: 0.18s; }
+.reveal.d4 { transition-delay: 0.24s; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1100px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+  .hero-visual { min-height: 320px; }
+  .algo-grid,
+  .research-grid { grid-template-columns: 1fr; gap: 24px; }
+  .feature-grid,
+  .hardware-grid,
+  .roadmap-grid,
+  .awards-grid { grid-template-columns: repeat(2, 1fr); }
+  .timeline-grid { grid-template-columns: 1fr 1fr; }
+  .metrics-strip { grid-template-columns: repeat(5, 1fr); }
+  .rejection-box { grid-template-columns: 1fr; gap: 20px; }
+  .viz-readouts { grid-template-columns: repeat(2, 1fr); }
+  .viz-bullets { grid-template-columns: 1fr; gap: 12px; }
+  .awards-cta { flex-direction: column; gap: 16px; text-align: center; }
+}
+
+@media (max-width: 720px) {
+  #navbar { top: 8px; left: 8px; right: 8px; padding: 0 12px; }
+  .nav-links { display: none; }
+  .nav-cta { display: none; }
+  .hamburger { display: flex; }
+  .mobile-menu { top: 72px; left: 8px; right: 8px; }
+  section { padding: 60px 0; }
+  #hero { padding-top: 100px; }
+  .hero-stats { grid-template-columns: 1fr; }
+  .hero-ctas { flex-direction: column; }
+  .stat-grid,
+  .feature-grid,
+  .hardware-grid,
+  .roadmap-grid,
+  .awards-grid,
+  .timeline-grid { grid-template-columns: 1fr; gap: 12px; }
+  .metrics-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .viz-readouts { grid-template-columns: 1fr 1fr; }
+  .chart-container.tall { height: 520px; }
+  .footer-inner { flex-direction: column; text-align: center; }
+  .awards-cta-buttons { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav id="navbar">
+  <a href="#hero" class="logo">
+    <span class="logo-dot"></span>
+    VeloSentinel
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#how-it-works">How</a></li>
+    <li><a href="#algorithm">Algorithm</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#visualizer">Demo</a></li>
+    <li><a href="#research">Research</a></li>
+  </ul>
+  <a href="#visualizer" class="nav-cta">Try Demo</a>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#problem">Problem</a>
+  <a href="#how-it-works">How It Works</a>
+  <a href="#algorithm">Algorithm</a>
+  <a href="#roadmap">Roadmap</a>
+  <a href="#results">Results</a>
+  <a href="#visualizer">Live Demo</a>
+  <a href="#research">Research</a>
+</div>
+
+<!-- ============ HERO ============ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-tag reveal">Autonomous Cyclist Safety // Made in India</div>
+        <h1 class="reveal d1">Because the<br>next second<br><span class="accent">matters.</span></h1>
+        <p class="hero-sub reveal d2">
+          VeloSentinel detects bicycle crashes in real time using a 4-phase
+          inertial sensing algorithm — and automatically dispatches GPS-tagged
+          SMS alerts to your emergency contacts. No phone. No pairing. No delays.
+        </p>
+        <div class="hero-stats reveal d3">
+          <div class="hero-stat">
+            <div class="hero-stat-num" data-count="92.7" data-suffix="%" data-decimals="1">0%</div>
+            <div class="hero-stat-label">Sensitivity</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num" data-count="0">0</div>
+            <div class="hero-stat-label">False Positives</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num" data-count="3.5" data-prefix="<" data-suffix="s" data-decimals="1">0s</div>
+            <div class="hero-stat-label">Latency</div>
+          </div>
+        </div>
+        <div class="hero-ctas reveal d4">
+          <a href="#visualizer" class="btn btn-primary">[ Watch Demo ]</a>
+          <a href="#research" class="btn btn-outline">Read the Paper >></a>
+        </div>
+      </div>
+      <div class="hero-visual reveal d2">
+        <svg class="bike-svg" viewBox="0 0 520 360" xmlns="http://www.w3.org/2000/svg">
+          <!-- Wheels -->
+          <circle cx="120" cy="240" r="78" fill="none" stroke="#111" stroke-width="4"/>
+          <circle cx="120" cy="240" r="73" fill="none" stroke="#00c853" stroke-width="1" stroke-dasharray="2 5" opacity="0.5"/>
+          <circle cx="120" cy="240" r="7" fill="#111"/>
+          <circle cx="400" cy="240" r="78" fill="none" stroke="#111" stroke-width="4"/>
+          <circle cx="400" cy="240" r="73" fill="none" stroke="#00c853" stroke-width="1" stroke-dasharray="2 5" opacity="0.5"/>
+          <circle cx="400" cy="240" r="7" fill="#111"/>
+          <!-- Spokes -->
+          <g stroke="#ccc" stroke-width="0.8">
+            <line x1="120" y1="166" x2="120" y2="314"/>
+            <line x1="46" y1="240" x2="194" y2="240"/>
+            <line x1="67" y1="187" x2="173" y2="293"/>
+            <line x1="67" y1="293" x2="173" y2="187"/>
+            <line x1="400" y1="166" x2="400" y2="314"/>
+            <line x1="326" y1="240" x2="474" y2="240"/>
+            <line x1="347" y1="187" x2="453" y2="293"/>
+            <line x1="347" y1="293" x2="453" y2="187"/>
+          </g>
+          <!-- Diamond frame -->
+          <line x1="245" y1="240" x2="120" y2="240" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+          <line x1="245" y1="240" x2="350" y2="158" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+          <line x1="245" y1="240" x2="222" y2="132" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+          <line x1="222" y1="132" x2="335" y2="132" stroke="#111" stroke-width="6" stroke-linecap="round"/>
+          <line x1="335" y1="132" x2="350" y2="158" stroke="#111" stroke-width="8" stroke-linecap="round"/>
+          <line x1="222" y1="132" x2="120" y2="240" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+          <line x1="350" y1="158" x2="400" y2="240" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+          <line x1="222" y1="132" x2="216" y2="100" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="214" cy="98" rx="22" ry="5" fill="#111"/>
+          <line x1="335" y1="132" x2="338" y2="92" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+          <line x1="320" y1="86" x2="356" y2="98" stroke="#111" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="320" cy="86" r="3" fill="#111"/>
+          <circle cx="356" cy="98" r="3" fill="#111"/>
+          <circle cx="245" cy="240" r="7" fill="#111"/>
+          <line x1="245" y1="240" x2="265" y2="262" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+          <rect x="258" y="259" width="16" height="6" rx="1.5" fill="#111"/>
+          <line x1="245" y1="240" x2="225" y2="218" stroke="#111" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
+          <!-- VeloSentinel device -->
+          <g>
+            <rect x="194" y="106" width="44" height="22" rx="0" fill="#00c853" stroke="#111" stroke-width="2"/>
+            <circle cx="232" cy="112" r="2.2" fill="#111">
+              <animate attributeName="opacity" values="1;0.2;1" dur="1.4s" repeatCount="indefinite"/>
+            </circle>
+            <text x="216" y="123" font-family="Space Mono, monospace" font-size="9" font-weight="700" fill="#111" text-anchor="middle" letter-spacing="0.5">VS</text>
+          </g>
+        </svg>
+        <div class="float-tag tag-1">IMU Locked</div>
+        <div class="float-tag tag-2">4G LTE Ready</div>
+        <div class="float-tag tag-3">GPS Acquired</div>
+        <div class="float-tag tag-4">FSM: Active</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPEC BAR ============ -->
+<div class="spec-bar">
+  <div class="container">
+    <div class="spec-bar-inner">
+      <div class="spec-bar-item">ESP32-S3 240MHz</div>
+      <div class="spec-bar-item">LTE Cat-M1</div>
+      <div class="spec-bar-item">GPS + GLONASS + BeiDou</div>
+      <div class="spec-bar-item">MPU6050 +-8g</div>
+      <div class="spec-bar-item">18650 Li-ion</div>
+      <div class="spec-bar-item">IP65 Enclosure</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">The Problem</span>
+      </div>
+      <h2 class="section-title reveal d1">India's forgotten cyclists.</h2>
+      <p class="section-sub reveal d2">Every year, lakhs of Indian cyclists are injured on roads, highways, and rural tracks — often with no one nearby to call for help.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card reveal">
+        <div class="stat-source">MoRTH 2023</div>
+        <div class="stat-num" data-count="7000" data-suffix="+">0+</div>
+        <div class="stat-desc">Cyclist deaths reported on Indian roads every year</div>
+      </div>
+      <div class="stat-card reveal d1">
+        <div class="stat-source">Nat'l Health Portal</div>
+        <div class="stat-num" data-count="22000" data-suffix="+">0+</div>
+        <div class="stat-desc">Reported cycling injuries annually — likely 5-10x higher unreported</div>
+      </div>
+      <div class="stat-card reveal d2">
+        <div class="stat-source">NCRB 2022</div>
+        <div class="stat-num" data-count="73" data-suffix="%">0%</div>
+        <div class="stat-desc">Of fatal crashes on highways and rural roads with no bystanders</div>
+      </div>
+      <div class="stat-card reveal d3">
+        <div class="stat-source">AIIMS Trauma Study</div>
+        <div class="stat-num">~30 min</div>
+        <div class="stat-desc">Average emergency response time on rural Indian roads</div>
+      </div>
+    </div>
+    <div class="problem-prose reveal">
+      <h3>Existing solutions have a critical flaw.</h3>
+      <p>
+        Smartphone-based fall detection apps work only if your phone survives the
+        crash, stays in range, and has battery. Garmin and Wahoo cycling computers
+        require an active Bluetooth pairing to a smartphone to send any alert —
+        creating a single point of failure at the worst possible moment.
+      </p>
+      <p>
+        And almost all of them are designed for premium Western markets, not for
+        the realities of Indian cycling: long highway tours, weekend rides on
+        unmarked rural roads, daily commutes through dense traffic where help may
+        be miles away.
+      </p>
+      <p>
+        VeloSentinel eliminates this dependency entirely. Sensor, processor,
+        cellular radio, and GPS live on a single board — sealed in a weather-resistant
+        enclosure mounted to your bicycle. It works even if your phone is in
+        pieces on the asphalt.
+      </p>
+      <div class="pull-quote">
+        Self-contained. Phone-independent.<br>
+        Always armed.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SOLUTION ============ -->
+<section id="solution" class="dark-section">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">Meet VeloSentinel</span>
+      </div>
+      <h2 class="section-title reveal d1" style="color:#fff">One device. Three jobs.</h2>
+      <p class="section-sub reveal d2">A compact, battery-powered crash detection and emergency response unit, built for Indian cyclists.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card reveal">
+        <span class="feature-num">01 // DETECT</span>
+        <h3>Detects Real Crashes</h3>
+        <p>A 4-phase finite state machine on the ESP32-S3 reads your IMU 500+ times per second, looking for the exact kinematic signature of a genuine crash: free-fall, impact, tilt, and stillness. Potholes and hard braking trigger zero alerts.</p>
+      </div>
+      <div class="feature-card reveal d1">
+        <span class="feature-num">02 // LOCATE</span>
+        <h3>Pinpoints Your Location</h3>
+        <p>The integrated SIM7670G combines 4G LTE with multi-constellation GNSS (GPS + GLONASS + BeiDou). On crash confirmation, it fetches your coordinates and appends a live Google Maps link to the alert SMS.</p>
+      </div>
+      <div class="feature-card reveal d2">
+        <span class="feature-num">03 // ALERT</span>
+        <h3>Alerts Who Matters</h3>
+        <p>Within 3.5 seconds of a confirmed crash, SMS alerts are dispatched to up to 3 pre-configured emergency contacts — family, friends, or 112. All configurable via the onboard Wi-Fi dashboard. No app download required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">How It Works</span>
+      </div>
+      <h2 class="section-title reveal d1">Four phases. Every gate must pass.</h2>
+      <p class="section-sub reveal d2">VeloSentinel uses a sequential 4-phase Finite State Machine. Every phase must be satisfied — in order — before an alert fires.</p>
+    </div>
+    <div class="timeline-grid">
+      <div class="timeline-card reveal" data-color="blue">
+        <div class="timeline-card-header">
+          <div class="timeline-num">01</div>
+          <span class="timeline-phase">Phase One</span>
+        </div>
+        <div class="timeline-card-body">
+          <h3>Monitoring</h3>
+          <p>The device continuously monitors total acceleration. At rest or riding normally: acc = 9.81 m/s2. The FSM waits silently.</p>
+          <div class="threshold-pill">acc >= 3.0 m/s2</div>
+        </div>
+      </div>
+      <div class="timeline-card reveal d1" data-color="amber">
+        <div class="timeline-card-header">
+          <div class="timeline-num">02</div>
+          <span class="timeline-phase">Phase Two</span>
+        </div>
+        <div class="timeline-card-body">
+          <h3>Free-Fall</h3>
+          <p>When the bike tips over or goes airborne, the seat-post-mounted device briefly experiences near-weightlessness. acc drops below 3.0 m/s2. A 700 ms window opens.</p>
+          <div class="threshold-pill">acc < 3.0 m/s2</div>
+        </div>
+      </div>
+      <div class="timeline-card reveal d2" data-color="rose">
+        <div class="timeline-card-header">
+          <div class="timeline-num">03</div>
+          <span class="timeline-phase">Phase Three</span>
+        </div>
+        <div class="timeline-card-body">
+          <h3>Impact</h3>
+          <p>Within 700 ms, the bike strikes the ground. acc spikes above 25 m/s2 (~2.5g). A 2500 ms confirmation window opens.</p>
+          <div class="threshold-pill">acc > 25.0 m/s2</div>
+        </div>
+      </div>
+      <div class="timeline-card reveal d3" data-color="mint">
+        <div class="timeline-card-header">
+          <div class="timeline-num">04</div>
+          <span class="timeline-phase">Phase Four</span>
+        </div>
+        <div class="timeline-card-body">
+          <h3>Validated</h3>
+          <p>Final gates: tilt > 50 deg (bike on side) AND variance < 2.5 (still). Both must pass. SMS + GPS dispatched.</p>
+          <div class="threshold-pill">tilt > 50 deg &amp; still</div>
+        </div>
+      </div>
+    </div>
+    <div class="rejection-box reveal">
+      <div>
+        <h3>Why potholes never trigger an alert.</h3>
+        <p>
+          Road hazards produce a direct impact spike from the IDLE state — with no
+          preceding free-fall phase. Since our FSM requires free-fall BEFORE it will
+          even listen for an impact, all pothole, speed bump, and hard braking events
+          are ignored at the very first gate. Across 4,000 simulated non-crash trials,
+          the algorithm produced zero false positives.
+        </p>
+      </div>
+      <div class="rejection-stat">
+        <div class="rejection-stat-num">0 / 4,000</div>
+        <div class="rejection-stat-label">False positives</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ALGORITHM ============ -->
+<section id="algorithm">
+  <div class="container">
+    <div class="algo-grid">
+      <div class="algo-text reveal">
+        <div class="section-box">
+          <span class="section-tag">The Algorithm</span>
+        </div>
+        <h2>Transparent.<br>Tunable.<br>Explainable.</h2>
+        <p>
+          Unlike black-box ML classifiers — which need labelled crash data that's
+          ethically and practically impossible to collect at scale — VeloSentinel's
+          detection logic is a deterministic finite state machine with four
+          configurable threshold parameters. Every decision is interpretable.
+          Every parameter can be tuned in the field via the onboard Wi-Fi dashboard
+          without reflashing firmware.
+        </p>
+        <div class="code-block">
+<span class="comment">// Phase 1: Free-fall detection</span>
+<span class="keyword">if</span> (state == <span class="string">IDLE</span> &amp;&amp; acc &lt; <span class="fn">JERK_THRESHOLD</span>) {
+    state = <span class="string">FREE_FALL</span>;        <span class="comment">// acc &lt; 3.0 m/s2</span>
+}
+
+<span class="comment">// Phase 2: Impact detection</span>
+<span class="keyword">if</span> (state == <span class="string">FREE_FALL</span>) {
+    <span class="keyword">if</span> (elapsed &gt; <span class="number">700</span>ms) state = <span class="string">IDLE</span>;       <span class="comment">// timeout</span>
+    <span class="keyword">if</span> (acc &gt; <span class="fn">IMPACT_THRESHOLD</span>)              <span class="comment">// acc &gt; 25.0 m/s2</span>
+        state = <span class="string">IMPACT_SEEN</span>;
+}
+
+<span class="comment">// Phase 3: Stillness + tilt confirmation</span>
+<span class="keyword">if</span> (state == <span class="string">IMPACT_SEEN</span> &amp;&amp; elapsed &gt; <span class="number">2500</span>ms) {
+    <span class="keyword">if</span> (variance &lt; <span class="number">2.5</span> &amp;&amp; tilt &gt; <span class="number">50</span> deg)
+        <span class="fn">CONFIRMED</span> -> send SMS + GPS;
+}
+        </div>
+        <table class="threshold-table">
+          <thead>
+            <tr><th>Parameter</th><th>Default</th><th>Range</th><th>Effect</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Impact threshold</td><td class="mono">25 m/s2</td><td class="mono">15-40</td><td>Higher = stricter</td></tr>
+            <tr><td>Free-fall floor</td><td class="mono">3 m/s2</td><td class="mono">1.5-5</td><td>Lower = stricter</td></tr>
+            <tr><td>Tilt threshold</td><td class="mono">50 deg</td><td class="mono">30-70 deg</td><td>Higher = stricter</td></tr>
+            <tr><td>Stillness var.</td><td class="mono">2.5</td><td class="mono">1-5</td><td>Lower = stricter</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="fsm-diagram reveal d2">
+        <h4>Finite State Machine</h4>
+        <svg class="fsm-svg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#616161"/>
+            </marker>
+          </defs>
+          <path class="fsm-arrow" d="M 130 100 L 290 100"/>
+          <path class="fsm-arrow" d="M 320 130 L 320 280"/>
+          <path class="fsm-arrow" d="M 270 310 L 130 310"/>
+          <path class="fsm-arrow" d="M 100 280 L 100 130" stroke-dasharray="4 4"/>
+          <text class="fsm-arrow-label" x="210" y="92" text-anchor="middle">acc &lt; 3.0</text>
+          <text class="fsm-arrow-label" x="328" y="210" text-anchor="start">acc &gt; 25.0</text>
+          <text class="fsm-arrow-label" x="200" y="328" text-anchor="middle">tilt &amp; still</text>
+          <text class="fsm-arrow-label" x="92" y="210" text-anchor="end">timeout</text>
+          <g data-state="idle">
+            <circle class="fsm-state-circle idle active" cx="100" cy="100" r="48"/>
+            <text class="fsm-label" x="100" y="96">IDLE</text>
+            <text class="fsm-sub" x="100" y="112">monitoring</text>
+          </g>
+          <g data-state="freefall">
+            <circle class="fsm-state-circle freefall" cx="320" cy="100" r="48"/>
+            <text class="fsm-label" x="320" y="96">FREE_FALL</text>
+            <text class="fsm-sub" x="320" y="112">700 ms</text>
+          </g>
+          <g data-state="impact">
+            <circle class="fsm-state-circle impact" cx="320" cy="310" r="48"/>
+            <text class="fsm-label" x="320" y="306">IMPACT</text>
+            <text class="fsm-sub" x="320" y="322">collecting</text>
+          </g>
+          <g data-state="confirming">
+            <circle class="fsm-state-circle confirming" cx="100" cy="310" r="48"/>
+            <text class="fsm-label" x="100" y="306">CONFIRMED</text>
+            <text class="fsm-sub" x="100" y="322">alert sent</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HARDWARE ============ -->
+<section id="hardware">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">Hardware</span>
+      </div>
+      <h2 class="section-title reveal d1">Built on proven components.</h2>
+      <p class="section-sub reveal d2">Every component selected for reliability, integration density, and low power consumption.</p>
+    </div>
+    <div class="hardware-grid">
+      <div class="card reveal">
+        <div class="card-header green">Core Platform</div>
+        <div class="card-body">
+          <h3>Waveshare ESP32 SIM7670G</h3>
+          <ul>
+            <li>ESP32-S3 dual-core 240 MHz</li>
+            <li>LTE Cat-M1 / NB-IoT / NB2</li>
+            <li>Integrated GPS + GLONASS + BeiDou</li>
+            <li>4G cellular + SMS capability</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card reveal d1">
+        <div class="card-header cyan">Inertial Sensor</div>
+        <div class="card-body">
+          <h3>InvenSense MPU6050</h3>
+          <ul>
+            <li>3-axis accelerometer (+-8g range)</li>
+            <li>3-axis gyroscope (+-500 deg/s)</li>
+            <li>21 Hz digital low-pass filter</li>
+            <li>I2C interface (SDA=15, SCL=16)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card reveal d2">
+        <div class="card-header yellow">Power</div>
+        <div class="card-body">
+          <h3>Samsung 18650 30Q</h3>
+          <ul>
+            <li>3000 mAh Li-ion cell</li>
+            <li>Estimated 8+ hour runtime</li>
+            <li>USB-C recharging</li>
+            <li>Deep sleep for extended standby</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="card-header dark">Mounting</div>
+        <div class="card-body">
+          <h3>Weather-Resistant Enclosure</h3>
+          <ul>
+            <li>Seat-post mounting bracket</li>
+            <li>IP65-rated housing</li>
+            <li>Shock-dampened IMU mount</li>
+            <li>Tool-free installation</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card reveal d1">
+        <div class="card-header purple">Interface</div>
+        <div class="card-body">
+          <h3>Wi-Fi Config Dashboard</h3>
+          <ul>
+            <li>Onboard Wi-Fi access point</li>
+            <li>Browser-based, no app needed</li>
+            <li>Real-time telemetry via WebSocket</li>
+            <li>EEPROM-persistent settings</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card reveal d2">
+        <div class="card-header red">Safety Light // Planned</div>
+        <div class="card-body">
+          <h3>WS2811 RGB Rear Light</h3>
+          <ul>
+            <li>Normal riding: steady red</li>
+            <li>Braking: bright flash</li>
+            <li>Crash confirmed: SOS strobe</li>
+            <li>Individually addressable LEDs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">Product Roadmap</span>
+      </div>
+      <h2 class="section-title reveal d1">From bench prototype to<br>commercial product.</h2>
+      <p class="section-sub reveal d2">Three phases — each one a complete, working device. We're shipping Phase 1 today and engineering toward a sub-3,000 rupee retail unit.</p>
+    </div>
+    <div class="roadmap-grid">
+      <div class="card phase-card reveal" data-phase="1">
+        <div class="card-header green" style="display:flex;align-items:center;justify-content:space-between">
+          <span>01 // Phase One</span>
+          <span class="phase-status">Shipping now</span>
+        </div>
+        <div class="card-body">
+          <h3>Bench Prototype</h3>
+          <p>The current build: a hand-wired Waveshare ESP32 SIM7670G + MPU6050 module inside a weather-resistant enclosure, mounted to the seat post. No light, no PCB — just the impact-detection brain, proven against the FSM test suite.</p>
+          <ul>
+            <li>ESP32-S3 + MPU6050 + 4G SMS + GPS</li>
+            <li>18650 Li-ion, 8+ hour runtime</li>
+            <li>Wi-Fi config dashboard</li>
+            <li>4-phase FSM, 92.7% sensitivity, 0 false positives</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card phase-card reveal d1" data-phase="2">
+        <div class="card-header yellow" style="display:flex;align-items:center;justify-content:space-between">
+          <span>02 // Phase Two</span>
+          <span class="phase-status">In design</span>
+        </div>
+        <div class="card-body">
+          <h3>Integrated PCB &amp; Light</h3>
+          <p>A purpose-built PCB that folds the ESP32, IMU, charging circuit, and a WS2811 RGB rear light into one shock-mounted unit. 3D-printed taillight form factor that bolts to a standard seat post.</p>
+          <ul>
+            <li>Custom 4-layer PCB, USB-C charging</li>
+            <li>WS2811 rear light: steady / brake-flash / SOS</li>
+            <li>3D-printed enclosure, IP65, tool-free mount</li>
+            <li>Concept renders: separate design pass</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card phase-card reveal d2" data-phase="3">
+        <div class="card-header dark" style="display:flex;align-items:center;justify-content:space-between">
+          <span>03 // Phase Three</span>
+          <span class="phase-status">Funded target</span>
+        </div>
+        <div class="card-body">
+          <h3>Commercial Product</h3>
+          <p>The final unit. Injection-moulded shell, certified cellular module, app-paired onboarding — built like Cosmo Connected's helmet light, priced for the Indian market.</p>
+          <div class="phase-price">
+            <span class="phase-price-amount">&lt; Rs.3,000</span>
+            <span class="phase-price-label">Target retail</span>
+          </div>
+          <ul>
+            <li>Certified eSIM, multi-carrier failover</li>
+            <li>Companion app, emergency-contact onboarding</li>
+            <li>BIS / EMI compliance, CE-grade enclosure</li>
+            <li>Direct-to-consumer + insurance/fleet channel</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section id="results">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal" style="background:var(--black);border-color:#444;box-shadow:3px 3px 0 0 #444">
+        <span class="section-tag" style="color:var(--green)">Validated Performance</span>
+      </div>
+      <h2 class="section-title reveal d1" style="color:#fff">6,000 trials.<br>Zero false positives.</h2>
+      <p class="section-sub reveal d2" style="color:rgba(255,255,255,0.5)">Monte Carlo simulation across 12 scenario categories — at default threshold settings.</p>
+    </div>
+    <div class="metrics-strip reveal">
+      <div class="metric">
+        <div class="metric-num" data-count="92.7" data-suffix="%" data-decimals="1">0%</div>
+        <div class="metric-label">Sensitivity</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" data-count="100.0" data-suffix="%" data-decimals="1">0%</div>
+        <div class="metric-label">Specificity</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" data-count="100.0" data-suffix="%" data-decimals="1">0%</div>
+        <div class="metric-label">Precision</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" data-count="0.962" data-decimals="3">0</div>
+        <div class="metric-label">F1 Score</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" data-count="97.5" data-suffix="%" data-decimals="1">0%</div>
+        <div class="metric-label">Accuracy</div>
+      </div>
+    </div>
+    <div class="chart-card reveal">
+      <h3>Detection Rate by Scenario // n=500 trials each</h3>
+      <div class="chart-container tall"><canvas id="scenarioChart"></canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <h3>Threshold Sensitivity Analysis // Impact Threshold Sweep</h3>
+      <div class="chart-container"><canvas id="sensitivityChart"></canvas></div>
+    </div>
+    <div class="confusion-matrix reveal">
+      <h3>Confusion Matrix // 6,000 total trials</h3>
+      <table class="cm-table">
+        <tr>
+          <th></th>
+          <th>Predicted Crash</th>
+          <th>Predicted Non-Crash</th>
+        </tr>
+        <tr>
+          <th>Actual Crash</th>
+          <td class="cm-cell cm-good">
+            <div class="cm-label">True Positive</div>
+            <div class="cm-value">1,853</div>
+          </td>
+          <td class="cm-cell cm-bad">
+            <div class="cm-label">False Negative</div>
+            <div class="cm-value">147</div>
+          </td>
+        </tr>
+        <tr>
+          <th>Actual Non-Crash</th>
+          <td class="cm-cell cm-bad">
+            <div class="cm-label">False Positive</div>
+            <div class="cm-value">0</div>
+          </td>
+          <td class="cm-cell cm-good">
+            <div class="cm-label">True Negative</div>
+            <div class="cm-value">4,000</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="key-insight reveal">
+      The multi-phase sequential gate architecture <strong>eliminates false positives entirely</strong>
+      across all 4,000 non-crash trials — including the most challenging edge case: a curb-drop jump
+      with genuine free-fall AND high-magnitude impact, correctly rejected by the tilt confirmation gate.
+    </div>
+  </div>
+</section>
+
+<!-- ============ VISUALIZER ============ -->
+<section id="visualizer">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">Live Demo</span>
+      </div>
+      <h2 class="section-title reveal d1">Watch the algorithm think.</h2>
+      <p class="section-sub reveal d2">An interactive simulation of the FSM processing real sensor traces. Pick a scenario and watch the state machine decide.</p>
+    </div>
+    <div class="viz-container reveal">
+      <div class="viz-toolbar">
+        <div class="viz-tabs" id="vizTabs">
+          <button class="viz-tab active" data-scenario="lateralCrash">Lateral Crash</button>
+          <button class="viz-tab" data-scenario="forwardCrash">Forward Crash</button>
+          <button class="viz-tab" data-scenario="pothole">Pothole</button>
+          <button class="viz-tab" data-scenario="curbDrop">Curb Drop</button>
+          <button class="viz-tab" data-scenario="normalRiding">Normal Riding</button>
+        </div>
+        <div class="viz-controls">
+          <button class="viz-btn" id="vizPlay" aria-label="Play / Pause">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="viz-btn" id="vizRestart" aria-label="Restart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="viz-canvas-wrap">
+        <div class="viz-state-pill" data-state="IDLE" id="vizStatePill">IDLE</div>
+        <div class="viz-legend">
+          <div class="viz-legend-item" style="color:#00e5ff"><span class="viz-legend-dot"></span>Acceleration (m/s2)</div>
+          <div class="viz-legend-item" style="color:#b388ff"><span class="viz-legend-dot"></span>Tilt angle (deg)</div>
+          <div class="viz-legend-item" style="color:#ff5252"><span class="viz-legend-dot" style="background:repeating-linear-gradient(90deg,currentColor 0 3px,transparent 3px 6px);height:2px"></span>Impact threshold</div>
+        </div>
+        <canvas class="viz-canvas" id="vizCanvas"></canvas>
+        <div class="viz-toast" id="vizToast">
+          <div class="viz-toast-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div class="viz-toast-content">
+            <span class="viz-toast-title">SMS Dispatched</span>
+            <span class="viz-toast-sub">Alert sent in 3.2s</span>
+          </div>
+        </div>
+      </div>
+      <div class="viz-readouts">
+        <div class="viz-readout">
+          <div class="viz-readout-label">Acceleration</div>
+          <div class="viz-readout-value mint" id="vizAcc">9.81 m/s2</div>
+        </div>
+        <div class="viz-readout">
+          <div class="viz-readout-label">Tilt Angle</div>
+          <div class="viz-readout-value" id="vizTilt">5.0 deg</div>
+        </div>
+        <div class="viz-readout">
+          <div class="viz-readout-label">Sample</div>
+          <div class="viz-readout-value" id="vizSample">0 / 0</div>
+        </div>
+        <div class="viz-readout">
+          <div class="viz-readout-label">Elapsed</div>
+          <div class="viz-readout-value" id="vizElapsed">0.00 s</div>
+        </div>
+      </div>
+    </div>
+    <div class="viz-bullets">
+      <div class="viz-bullet reveal">
+        <div class="viz-bullet-title">Real FSM Logic</div>
+        <div class="viz-bullet-desc">The same finite state machine running on the actual ESP32-S3 firmware processes each sample in your browser.</div>
+      </div>
+      <div class="viz-bullet reveal d1">
+        <div class="viz-bullet-title">Five Scenarios</div>
+        <div class="viz-bullet-desc">Lateral and forward crashes confirm. Pothole, curb-drop and normal riding all correctly reject.</div>
+      </div>
+      <div class="viz-bullet reveal d2">
+        <div class="viz-bullet-title">Live State Transitions</div>
+        <div class="viz-bullet-desc">Watch the state pill in the corner change colour as the FSM walks through each phase gate.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESEARCH ============ -->
+<section id="research">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">Research</span>
+      </div>
+      <h2 class="section-title reveal d1">Peer-quality methodology.</h2>
+      <p class="section-sub reveal d2">VeloSentinel is backed by a formal research paper with literature review, algorithm formalization, and validated results.</p>
+    </div>
+    <div class="research-grid">
+      <div class="paper-card reveal">
+        <div class="paper-top">
+          <div class="paper-label">Research Paper // 2026</div>
+          <div class="paper-title-snippet">VeloSentinel</div>
+        </div>
+        <div class="paper-body">
+          <h3>A Multi-Phase Finite State Machine for Real-Time Bicycle Crash Detection Using Inertial Sensing and Cellular IoT</h3>
+          <div class="paper-author">Yuveer Rajpal // April 2026</div>
+          <p class="paper-abstract">
+            Bicycle crashes cause over 7,000 fatalities annually on Indian roads, yet
+            real-time automated crash detection and alerting remains largely dependent
+            on smartphone-based solutions that fail precisely when they are needed
+            most. We present VeloSentinel, a self-contained cyclist safety unit...
+          </p>
+          <div class="paper-sections">
+            Abstract > Introduction > Related Work > System Architecture > Algorithm > Results > Conclusion
+          </div>
+          <a href="#" class="btn btn-dark">Read Full Paper >></a>
+        </div>
+      </div>
+      <div class="research-col reveal d1">
+        <h3>Built on prior research</h3>
+        <ol class="references">
+          <li>Bourke &amp; O Laighin (2008) — threshold-based fall detection with post-fall inactivity validation</li>
+          <li>Mukherjee et al. (2015) — accelerometer-based bicycle incident detection</li>
+          <li>Ministry of Road Transport &amp; Highways, India — Road Accidents in India 2023</li>
+          <li>InvenSense MPU6050 Technical Specification</li>
+          <li>SIMCom SIM7670G AT Commands Manual</li>
+        </ol>
+        <h3>Methodology highlights</h3>
+        <ul class="methodology-list">
+          <li>6,000 Monte Carlo trials across 12 scenario types</li>
+          <li>Physics-accurate IMU signal models with Gaussian noise</li>
+          <li>Python FSM mirror of production firmware (bit-for-bit equivalent)</li>
+          <li>Threshold sensitivity sweep: 3 parameters x 9 values each</li>
+          <li>Honest limitations documented: parametric models vs. physical data</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AWARDS / PROJECT ============ -->
+<section id="awards">
+  <div class="container">
+    <div class="center">
+      <div class="section-box reveal">
+        <span class="section-tag">The Project</span>
+      </div>
+      <h2 class="section-title reveal d1">Engineered for scientific excellence.</h2>
+      <p class="section-sub reveal d2">VeloSentinel represents a complete engineering research project — from problem identification through hardware design, algorithm development, simulation validation, and documentation.</p>
+    </div>
+    <div class="awards-grid">
+      <div class="award-card reveal">
+        <div class="award-label">Hardware</div>
+        <h3>End-to-End Build</h3>
+        <p>Custom firmware in Arduino C++ for ESP32-S3. Full sensor integration, GSM alerting, GPS parsing, and a WebSocket-served dashboard — all from scratch.</p>
+      </div>
+      <div class="award-card reveal d1">
+        <div class="award-label">Algorithm</div>
+        <h3>Novel Detection Algorithm</h3>
+        <p>A 4-phase sequential FSM that outperforms single-threshold methods. Mathematically formalized with configurable parameters and interpretable failure modes.</p>
+      </div>
+      <div class="award-card reveal d2">
+        <div class="award-label">Research</div>
+        <h3>Formal Research Paper</h3>
+        <p>8-section academic paper with literature review, related work analysis, methodology, results tables, and honest limitations. Follows IEEE citation format.</p>
+      </div>
+      <div class="award-card reveal">
+        <div class="award-label">Simulation</div>
+        <h3>Monte Carlo Validation</h3>
+        <p>6,000-trial Python simulation with 12 scenario categories, 3-parameter threshold sensitivity sweep, and confusion matrix analysis.</p>
+      </div>
+      <div class="award-card reveal d1">
+        <div class="award-label">Visualization</div>
+        <h3>Interactive Demo Tool</h3>
+        <p>Browser-based FSM visualizer with real-time animated sensor traces, state machine display, and live session metrics. Built entirely in vanilla JS.</p>
+      </div>
+      <div class="award-card reveal d2">
+        <div class="award-label">Reproducibility</div>
+        <h3>Fully Reproducible Study</h3>
+        <p>All source code, simulation scripts, and analysis notebooks available for independent verification. Every result can be regenerated end-to-end.</p>
+      </div>
+    </div>
+    <div class="awards-cta reveal">
+      <div class="awards-cta-text">
+        Available for demonstration,<br>judging, and Q&amp;A.
+      </div>
+      <div class="awards-cta-buttons">
+        <a href="#research" class="btn btn-primary">Read the Paper</a>
+        <a href="#visualizer" class="btn btn-outline">Try the Demo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">VeloSentinel // Yuveer Rajpal // 2026</div>
+      <div class="footer-links">
+        <a href="#research">Paper</a>
+        <a href="#results">Results</a>
+        <a href="#visualizer">Demo</a>
+        <a href="#hardware">Hardware</a>
+      </div>
+      <div class="footer-contact">yuveerrajpal@gmail.com // Made in India</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ ALERT BADGE ============ -->
+<div id="alert-badge">
+  <span class="alert-dot"></span>
+  <span>DEMO: ALERT SENT IN 3.2s</span>
+  <div class="alert-preview">
+    <span class="alert-preview-title">!! Fall Detected</span>
+    <div class="alert-preview-row">Tilt: 74.2 deg // Acc: 30.1 m/s2</div>
+    <div class="alert-preview-row">Time: 14:32:07 IST</div>
+    <a class="alert-preview-link">https://maps.google.com/?q=28.6139,77.2090</a>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   NAVIGATION
+============================================================ */
+const navbar = document.getElementById('navbar');
+const navLinks = document.querySelectorAll('.nav-links a');
+const sectionsForNav = document.querySelectorAll('section[id], footer');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sectionsForNav.forEach(sec => {
+    const top = sec.offsetTop - 140;
+    if (window.scrollY >= top) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}, { passive: true });
+
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => mobileMenu.classList.toggle('open'));
+mobileMenu.querySelectorAll('a').forEach(a =>
+  a.addEventListener('click', () => mobileMenu.classList.remove('open'))
+);
+
+/* ============================================================
+   SCROLL REVEAL + COUNT UP
+============================================================ */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      entry.target.querySelectorAll('[data-count]').forEach(n => {
+        if (!n.dataset.counted) {
+          n.dataset.counted = '1';
+          countUp(n);
+        }
+      });
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+function countUp(el) {
+  const target = parseFloat(el.dataset.count);
+  const decimals = parseInt(el.dataset.decimals || '0');
+  const suffix = el.dataset.suffix || '';
+  const prefix = el.dataset.prefix || '';
+  const duration = 1500;
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const val = target * eased;
+    el.textContent = prefix + val.toFixed(decimals) + suffix;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+document.querySelectorAll('#hero [data-count]').forEach(n => {
+  n.dataset.counted = '1';
+  setTimeout(() => countUp(n), 400);
+});
+
+/* ============================================================
+   ALERT BADGE
+============================================================ */
+setTimeout(() => document.getElementById('alert-badge').classList.add('visible'), 7000);
+
+/* ============================================================
+   FSM DIAGRAM IDLE ANIMATION
+============================================================ */
+const fsmStates = ['idle', 'freefall', 'impact', 'confirming'];
+let fsmIdx = 0;
+function cycleFsmStates() {
+  document.querySelectorAll('.fsm-state-circle').forEach(c => c.classList.remove('active'));
+  const next = fsmStates[fsmIdx];
+  const circle = document.querySelector(`#algorithm [data-state="${next}"] .fsm-state-circle`);
+  if (circle) circle.classList.add('active');
+  fsmIdx = (fsmIdx + 1) % fsmStates.length;
+}
+setInterval(cycleFsmStates, 2400);
+
+/* ============================================================
+   FSM VISUALIZER (INLINE)
+============================================================ */
+const FSM = { IDLE: 'IDLE', FREE_FALL: 'FREE_FALL', IMPACT_SEEN: 'IMPACT_SEEN', CONFIRMED: 'CONFIRMED' };
+const CFG = {
+  jerk: 3.0,
+  impact: 25.0,
+  tilt: 50,
+  variance: 2.5,
+  freeFallTimeoutMs: 700,
+  confirmDelayMs: 2500,
+  sampleRateMs: 20,
+};
+
+function rand(a, b) { return a + Math.random() * (b - a); }
+function noise(amp) { return (Math.random() - 0.5) * amp; }
+
+function generateNormalRiding() {
+  const out = [];
+  for (let i = 0; i < 240; i++) {
+    out.push({ acc: 9.81 + noise(2.4), tilt: 4 + noise(6) });
+  }
+  return out;
+}
+
+function generatePothole() {
+  const out = [];
+  for (let i = 0; i < 240; i++) {
+    let acc = 9.81 + noise(2.0);
+    let tilt = 5 + noise(5);
+    if (i >= 90 && i < 100) acc = 28 + noise(6);
+    if (i >= 100 && i < 115) acc = 9.81 + noise(4);
+    out.push({ acc, tilt });
+  }
+  return out;
+}
+
+function generateLateralCrash() {
+  const out = [];
+  const ffStart = 70, ffEnd = 88, impStart = 88, impEnd = 96;
+  for (let i = 0; i < 260; i++) {
+    let acc = 9.81 + noise(1.6);
+    let tilt = 4 + noise(4);
+    if (i >= ffStart && i < ffEnd) acc = 1.8 + noise(1.0);
+    if (i >= impStart && i < impEnd) acc = 31 + noise(8);
+    if (i >= impEnd && i < impEnd + 30) {
+      acc = 9.81 + noise(7);
+      tilt = 30 + (i - impEnd) * 2 + noise(8);
+    }
+    if (i >= impEnd + 30) {
+      acc = 9.81 + noise(0.4);
+      tilt = 72 + noise(4);
+    }
+    out.push({ acc, tilt });
+  }
+  return out;
+}
+
+function generateForwardCrash() {
+  const out = [];
+  const ffStart = 60, ffEnd = 76, impStart = 76, impEnd = 84;
+  for (let i = 0; i < 260; i++) {
+    let acc = 9.81 + noise(1.4);
+    let tilt = 6 + noise(4);
+    if (i >= ffStart && i < ffEnd) acc = 2.2 + noise(0.8);
+    if (i >= impStart && i < impEnd) acc = 34 + noise(9);
+    if (i >= impEnd && i < impEnd + 24) {
+      acc = 9.81 + noise(6);
+      tilt = 35 + (i - impEnd) * 2.2 + noise(7);
+    }
+    if (i >= impEnd + 24) {
+      acc = 9.81 + noise(0.4);
+      tilt = 68 + noise(5);
+    }
+    out.push({ acc, tilt });
+  }
+  return out;
+}
+
+function generateCurbDrop() {
+  const out = [];
+  const ffStart = 80, ffEnd = 95, impStart = 95, impEnd = 102;
+  for (let i = 0; i < 260; i++) {
+    let acc = 9.81 + noise(1.6);
+    let tilt = 5 + noise(4);
+    if (i >= ffStart && i < ffEnd) acc = 2.0 + noise(0.9);
+    if (i >= impStart && i < impEnd) acc = 28 + noise(7);
+    if (i >= impEnd && i < impEnd + 25) {
+      acc = 9.81 + noise(3);
+      tilt = 10 + noise(8);
+    }
+    if (i >= impEnd + 25) {
+      acc = 9.81 + noise(2);
+      tilt = 12 + noise(6);
+    }
+    out.push({ acc, tilt });
+  }
+  return out;
+}
+
+const SCENARIOS = {
+  lateralCrash:  { name: 'Lateral Crash',  data: generateLateralCrash(),  expectedConfirm: true },
+  forwardCrash:  { name: 'Forward Crash',  data: generateForwardCrash(),  expectedConfirm: true },
+  pothole:       { name: 'Pothole Hit',    data: generatePothole(),       expectedConfirm: false },
+  curbDrop:      { name: 'Curb Drop Jump', data: generateCurbDrop(),      expectedConfirm: false },
+  normalRiding:  { name: 'Normal Riding',  data: generateNormalRiding(),  expectedConfirm: false },
+};
+
+class FsmEngine {
+  constructor() { this.reset(); }
+  reset() {
+    this.state = FSM.IDLE;
+    this.freeFallStartMs = 0;
+    this.impactStartMs = 0;
+    this.postImpactSamples = [];
+    this.confirmed = false;
+  }
+  step(sample, elapsedMs) {
+    const acc = sample.acc;
+    const tilt = sample.tilt;
+
+    if (this.state === FSM.IDLE) {
+      if (acc < CFG.jerk) {
+        this.state = FSM.FREE_FALL;
+        this.freeFallStartMs = elapsedMs;
+      }
+    } else if (this.state === FSM.FREE_FALL) {
+      if (elapsedMs - this.freeFallStartMs > CFG.freeFallTimeoutMs) {
+        this.state = FSM.IDLE;
+      } else if (acc > CFG.impact) {
+        this.state = FSM.IMPACT_SEEN;
+        this.impactStartMs = elapsedMs;
+        this.postImpactSamples = [];
+      }
+    } else if (this.state === FSM.IMPACT_SEEN) {
+      this.postImpactSamples.push(sample);
+      if (elapsedMs - this.impactStartMs > CFG.confirmDelayMs) {
+        const tail = this.postImpactSamples.slice(-30);
+        const accs = tail.map(s => s.acc);
+        const mean = accs.reduce((a, b) => a + b, 0) / accs.length;
+        const variance = accs.reduce((a, b) => a + (b - mean) ** 2, 0) / accs.length;
+        const lastTilt = tail[tail.length - 1].tilt;
+        if (variance < CFG.variance && lastTilt > CFG.tilt) {
+          this.state = FSM.CONFIRMED;
+          this.confirmed = true;
+        } else {
+          this.state = FSM.IDLE;
+        }
+      }
+    }
+    return this.state;
+  }
+}
+
+/* ===== Visualizer rendering ===== */
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+const statePill = document.getElementById('vizStatePill');
+const accReadout = document.getElementById('vizAcc');
+const tiltReadout = document.getElementById('vizTilt');
+const sampleReadout = document.getElementById('vizSample');
+const elapsedReadout = document.getElementById('vizElapsed');
+const toast = document.getElementById('vizToast');
+const playBtn = document.getElementById('vizPlay');
+const restartBtn = document.getElementById('vizRestart');
+const tabs = document.querySelectorAll('.viz-tab');
+
+let currentScenarioKey = 'lateralCrash';
+let frame = 0;
+let playing = true;
+let fsm = new FsmEngine();
+let lastConfirmFlash = 0;
+let toastVisibleUntil = 0;
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function setScenario(key) {
+  currentScenarioKey = key;
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.scenario === key));
+  restart();
+}
+
+function restart() {
+  frame = 0;
+  fsm = new FsmEngine();
+  toast.classList.remove('visible');
+  toastVisibleUntil = 0;
+  statePill.dataset.state = 'IDLE';
+  statePill.textContent = 'IDLE';
+}
+
+function togglePlay() {
+  playing = !playing;
+  playBtn.innerHTML = playing
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+}
+
+playBtn.addEventListener('click', togglePlay);
+restartBtn.addEventListener('click', restart);
+tabs.forEach(t => t.addEventListener('click', () => setScenario(t.dataset.scenario)));
+
+document.addEventListener('keydown', (e) => {
+  const r = canvas.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > window.innerHeight) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+    const keys = Object.keys(SCENARIOS);
+    let idx = keys.indexOf(currentScenarioKey);
+    idx = (idx + (e.code === 'ArrowRight' ? 1 : -1) + keys.length) % keys.length;
+    setScenario(keys[idx]);
+  }
+});
+
+const STATE_COLORS = {
+  IDLE:        { bg: 'rgba(0,229,255,0.06)',  stroke: '#00e5ff', label: 'IDLE'        },
+  FREE_FALL:   { bg: 'rgba(255,234,0,0.08)',  stroke: '#ffea00', label: 'FREE FALL'   },
+  IMPACT_SEEN: { bg: 'rgba(255,82,82,0.10)',  stroke: '#ff5252', label: 'IMPACT'      },
+  CONFIRMED:   { bg: 'rgba(0,200,83,0.12)',   stroke: '#00c853', label: 'CONFIRMED'   },
+};
+
+function draw() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  const sc = STATE_COLORS[fsm.state];
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = sc.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  const padL = 56, padR = 24, padT = 70, padB = 36;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const accMax = 40;
+  const tiltMax = 90;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + plotW, y);
+    ctx.stroke();
+  }
+
+  // Y axis labels
+  ctx.font = "10px 'Space Mono', monospace";
+  ctx.fillStyle = 'rgba(0,229,255,0.5)';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = accMax - (accMax / 4) * i;
+    ctx.fillText(val.toFixed(0), padL - 8, padT + (plotH / 4) * i + 3);
+  }
+  ctx.fillStyle = 'rgba(179,136,255,0.5)';
+  ctx.textAlign = 'left';
+  for (let i = 0; i <= 4; i++) {
+    const val = tiltMax - (tiltMax / 4) * i;
+    ctx.fillText(val.toFixed(0) + ' deg', padL + plotW + 6, padT + (plotH / 4) * i + 3);
+  }
+
+  // Impact threshold line
+  const impY = padT + plotH * (1 - CFG.impact / accMax);
+  ctx.strokeStyle = 'rgba(255,82,82,0.4)';
+  ctx.setLineDash([4, 4]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, impY);
+  ctx.lineTo(padL + plotW, impY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,82,82,0.6)';
+  ctx.font = "bold 9px 'Space Mono', monospace";
+  ctx.textAlign = 'left';
+  ctx.fillText('IMPACT 25 m/s2', padL + 4, impY - 4);
+
+  // Free-fall threshold line
+  const ffY = padT + plotH * (1 - CFG.jerk / accMax);
+  ctx.strokeStyle = 'rgba(255,234,0,0.3)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(padL, ffY);
+  ctx.lineTo(padL + plotW, ffY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,234,0,0.5)';
+  ctx.fillText('FREE-FALL 3 m/s2', padL + 4, ffY + 12);
+
+  // Tilt threshold
+  const tiltThY = padT + plotH * (1 - CFG.tilt / tiltMax);
+  ctx.strokeStyle = 'rgba(179,136,255,0.2)';
+  ctx.setLineDash([2, 5]);
+  ctx.beginPath();
+  ctx.moveTo(padL, tiltThY);
+  ctx.lineTo(padL + plotW, tiltThY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Data lines
+  const data = SCENARIOS[currentScenarioKey].data;
+  const visible = Math.min(frame, data.length);
+  if (visible > 1) {
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < visible; i++) {
+      const x = padL + (i / (data.length - 1)) * plotW;
+      const yVal = Math.max(0, Math.min(accMax, data[i].acc));
+      const y = padT + plotH * (1 - yVal / accMax);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#b388ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < visible; i++) {
+      const x = padL + (i / (data.length - 1)) * plotW;
+      const yVal = Math.max(0, Math.min(tiltMax, data[i].tilt));
+      const y = padT + plotH * (1 - yVal / tiltMax);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    if (visible < data.length) {
+      const cx = padL + ((visible - 1) / (data.length - 1)) * plotW;
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, padT);
+      ctx.lineTo(cx, padT + plotH);
+      ctx.stroke();
+    }
+  }
+
+  // Title
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = "600 11px 'Space Grotesk', sans-serif";
+  ctx.textAlign = 'center';
+  ctx.fillText(SCENARIOS[currentScenarioKey].name.toUpperCase(), w / 2, 28);
+
+  // Timeline
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = "9px 'Space Mono', monospace";
+  ctx.textAlign = 'center';
+  const totalSec = (data.length * CFG.sampleRateMs) / 1000;
+  for (let i = 0; i <= 4; i++) {
+    const x = padL + (plotW / 4) * i;
+    ctx.fillText(((totalSec / 4) * i).toFixed(1) + 's', x, h - 14);
+  }
+}
+
+let lastTick = 0;
+const samplesPerFrame = 1.5;
+let acc = 0;
+
+function loop(now) {
+  if (!lastTick) lastTick = now;
+  const dt = now - lastTick;
+  lastTick = now;
+
+  if (playing) {
+    acc += dt * (samplesPerFrame / (1000 / 60));
+    while (acc >= 1) {
+      acc -= 1;
+      const data = SCENARIOS[currentScenarioKey].data;
+      if (frame < data.length) {
+        const sample = data[frame];
+        const elapsedMs = frame * CFG.sampleRateMs;
+        const newState = fsm.step(sample, elapsedMs);
+
+        if (statePill.dataset.state !== newState) {
+          statePill.dataset.state = newState;
+          statePill.textContent = STATE_COLORS[newState].label;
+        }
+
+        accReadout.textContent = sample.acc.toFixed(2) + ' m/s2';
+        tiltReadout.textContent = sample.tilt.toFixed(1) + ' deg';
+        sampleReadout.textContent = (frame + 1) + ' / ' + data.length;
+        elapsedReadout.textContent = (elapsedMs / 1000).toFixed(2) + ' s';
+
+        if (newState === FSM.CONFIRMED && !toast.classList.contains('visible')) {
+          toast.classList.add('visible');
+          toastVisibleUntil = now + 4000;
+        }
+
+        frame++;
+      } else {
+        if (toastVisibleUntil && now > toastVisibleUntil) {
+          toast.classList.remove('visible');
+          toastVisibleUntil = 0;
+        }
+        if (now - lastConfirmFlash > 2500) {
+          restart();
+          lastConfirmFlash = now;
+        }
+        break;
+      }
+    }
+  }
+
+  if (toastVisibleUntil && now > toastVisibleUntil) {
+    toast.classList.remove('visible');
+    toastVisibleUntil = 0;
+  }
+
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ============================================================
+   CHART.JS — RESULTS
+============================================================ */
+Chart.defaults.color = 'rgba(255,255,255,0.5)';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 10;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+const scenarioCtx = document.getElementById('scenarioChart');
+if (scenarioCtx) {
+  const scenarios = [
+    { label: 'Lateral Fall (Slow)',     value: 99.4, type: 'crash' },
+    { label: 'Lateral Fall (Fast)',     value: 100.0, type: 'crash' },
+    { label: 'Forward Endo Crash',      value: 100.0, type: 'crash' },
+    { label: 'Rear-End Impact',         value: 98.8, type: 'crash' },
+    { label: 'Soft Surface Fall',       value: 71.2, type: 'crash' },
+    { label: 'Normal Riding',           value: 0.0,  type: 'nocrash' },
+    { label: 'Rough Road / Potholes',   value: 0.0,  type: 'nocrash' },
+    { label: 'Speed Bumps',             value: 0.0,  type: 'nocrash' },
+    { label: 'Hard Braking',            value: 0.0,  type: 'nocrash' },
+    { label: 'Curb Drop (jump)',        value: 0.0,  type: 'nocrash' },
+    { label: 'Sharp Cornering',         value: 0.0,  type: 'nocrash' },
+    { label: 'Standing at Rest',        value: 0.0,  type: 'nocrash' },
+  ];
+  const colorFor = (s) => {
+    if (s.type === 'crash') {
+      if (s.value >= 95) return '#00c853';
+      if (s.value >= 80) return '#ffea00';
+      return '#ff5252';
+    }
+    return 'rgba(0,229,255,0.4)';
+  };
+  const scenarioLabelPlugin = {
+    id: 'scenarioLabelPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.font = "700 10px 'Space Mono', monospace";
+      ctx.textBaseline = 'middle';
+      meta.data.forEach((bar, i) => {
+        const s = scenarios[i];
+        const v = s.value;
+        const xStart = chart.scales.x.getPixelForValue(0);
+        if (v === 0) {
+          ctx.fillStyle = 'rgba(0,229,255,0.7)';
+          ctx.textAlign = 'left';
+          ctx.fillText('0% > correctly ignored', xStart + 8, bar.y);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.textAlign = 'left';
+          ctx.fillText(v.toFixed(1) + '%', bar.x + 8, bar.y);
+        }
+      });
+      ctx.restore();
+    }
+  };
+  new Chart(scenarioCtx, {
+    type: 'bar',
+    data: {
+      labels: scenarios.map(s => s.label),
+      datasets: [{
+        label: 'Detection Rate (%)',
+        data: scenarios.map(s => s.value),
+        backgroundColor: scenarios.map(colorFor),
+        borderRadius: 0,
+        borderSkipped: false,
+        barPercentage: 0.7,
+        minBarLength: 2,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 40 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#444',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,0.7)',
+          padding: 12,
+          titleFont: { family: "'Space Mono', monospace" },
+          bodyFont: { family: "'Space Mono', monospace" },
+          callbacks: {
+            label: (c) => {
+              const s = scenarios[c.dataIndex];
+              if (s.value === 0) return ' 0% -- correctly ignored (non-crash)';
+              return ' ' + c.parsed.x.toFixed(1) + '% detection rate';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { callback: v => v + '%' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            color: (ctx) => {
+              const s = scenarios[ctx.index];
+              return s && s.type === 'nocrash' ? 'rgba(0,229,255,0.6)' : 'rgba(255,255,255,0.6)';
+            }
+          }
+        }
+      }
+    },
+    plugins: [scenarioLabelPlugin]
+  });
+}
+
+const sensCtx = document.getElementById('sensitivityChart');
+if (sensCtx) {
+  const thresholds = [15, 18, 20, 22, 25, 28, 32, 36, 40];
+  const sensitivity = [98, 97, 96, 95, 92.7, 88, 80, 70, 58];
+  const specificity = [100, 100, 100, 100, 100, 100, 100, 100, 100];
+
+  new Chart(sensCtx, {
+    type: 'line',
+    data: {
+      labels: thresholds.map(t => t + ' m/s2'),
+      datasets: [
+        {
+          label: 'Sensitivity',
+          data: sensitivity,
+          borderColor: '#00c853',
+          backgroundColor: 'rgba(0,200,83,0.1)',
+          borderWidth: 3,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 5,
+          pointBackgroundColor: '#00c853',
+          pointBorderColor: '#1a1a1a',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Specificity',
+          data: specificity,
+          borderColor: '#00e5ff',
+          borderWidth: 2,
+          tension: 0,
+          fill: false,
+          borderDash: [6, 4],
+          pointRadius: 4,
+          pointBackgroundColor: '#00e5ff',
+          pointBorderColor: '#1a1a1a',
+          pointBorderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { boxWidth: 14, boxHeight: 14, padding: 16, color: 'rgba(255,255,255,0.7)', font: { family: "'Space Mono', monospace" } } },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#444',
+          borderWidth: 1,
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,0.7)',
+          padding: 12,
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          title: { display: true, text: 'Impact Threshold', color: 'rgba(255,255,255,0.4)', font: { size: 10, family: "'Space Mono', monospace" } }
+        },
+        y: {
+          min: 40, max: 105,
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { callback: v => v + '%' },
+          title: { display: true, text: 'Rate', color: 'rgba(255,255,255,0.4)', font: { size: 10, family: "'Space Mono', monospace" } }
+        }
+      }
+    },
+    plugins: [{
+      id: 'defaultLine',
+      afterDraw: (chart) => {
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea) return;
+        const x = scales.x.getPixelForValue(4);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,200,83,0.5)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+        ctx.fillStyle = '#00c853';
+        ctx.font = "bold 10px 'Space Mono', monospace";
+        ctx.textAlign = 'center';
+        ctx.fillText('DEFAULT', x, chartArea.top + 14);
+        ctx.restore();
+      }
+    }]
+  });
+}
+</script>
+
+</body>
+</html>
